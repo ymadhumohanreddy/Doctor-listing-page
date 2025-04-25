@@ -69,9 +69,14 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({ doctors, onSearch }) => {
           placeholder="Search doctors by name..."
           value={searchTerm}
           onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setShowSuggestions(true);
-          }}
+  const value = e.target.value;
+  setSearchTerm(value);
+  setShowSuggestions(true);
+  if (value.trim() === '') {
+    onSearch(''); // Show all doctors again
+  }
+}}
+
           onKeyDown={handleKeyDown}
           onFocus={() => setShowSuggestions(true)}
         />
