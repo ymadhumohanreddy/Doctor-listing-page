@@ -114,10 +114,10 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-blue-400 py-8">
       <div className="container mx-auto px-4">
         {/* Header with search */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div className="bg-blue-50 rounded-lg shadow-sm p-6 mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Find Doctors</h1>
           <DoctorSearch doctors={doctors} onSearch={handleSearch} />
         </div>

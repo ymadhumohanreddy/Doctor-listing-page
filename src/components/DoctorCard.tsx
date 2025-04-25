@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { Doctor } from '../services/doctorApi';
+import { Avatar, AvatarFallback } from './ui/avatar';
 
 interface DoctorCardProps {
   doctor: Doctor;
@@ -12,9 +12,11 @@ const DoctorCard: React.FC<DoctorCardProps> = ({ doctor }) => {
       <div className="flex flex-col md:flex-row">
         {/* Doctor's avatar/image section */}
         <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-4">
-          <div className="w-20 h-20 bg-medical-100 rounded-full flex items-center justify-center text-medical-700 text-xl font-semibold">
-            {doctor.name.substring(0, 2).toUpperCase()}
-          </div>
+          <Avatar className="w-20 h-20">
+            <AvatarFallback className="bg-medical-100 text-medical-700">
+              {doctor.name.substring(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
         </div>
 
         {/* Doctor's details section */}
