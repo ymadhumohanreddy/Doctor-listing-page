@@ -8,7 +8,10 @@ interface DoctorCardProps {
 
 const DoctorCard: React.FC<DoctorCardProps> = ({ doctor }) => {
   return (
-    <div data-testid="doctor-card" className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+    <div
+  data-testid="doctor-card"
+  className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-transform transform hover:scale-105"
+>
       <div className="flex flex-col md:flex-row">
         {/* Doctor's avatar/image section */}
         <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-4">
