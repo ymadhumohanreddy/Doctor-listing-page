@@ -57,7 +57,7 @@ const DoctorSearch: React.FC<DoctorSearchProps> = ({ doctors, onSearch }) => {
   };
 
   return (
-    <div className="w-full max-w-2xl relative" ref={searchRef}>
+    <div className="w-full max-w-8xl relative" ref={searchRef}>
       <div className="relative">
         <div className="absolute inset-y-0 start-0 flex items-center pl-3 pointer-events-none">
           <Search className="h-5 w-5 text-gray-400" />
