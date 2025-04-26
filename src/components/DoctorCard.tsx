@@ -22,7 +22,7 @@ export function DoctorCard({ doctor }: DoctorCardProps) {
 
   return (
     <Card 
-      className="mb-4 overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-blue-300" 
+      className="mb-4 overflow-hidden transition-all duration-200 hover:scale-105 hover:border-blue-300" 
       data-testid="doctor-card"
     >
       <CardContent className="p-6">

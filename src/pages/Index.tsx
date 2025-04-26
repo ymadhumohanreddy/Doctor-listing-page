@@ -76,8 +76,11 @@ const Index = () => {
             </div>
           ) : (
             <div>
-              <h2 className="text-xl font-bold mb-4">Found {doctors.length} Doctors</h2>
-              <div className="space-y-4">
+              <h2 className="text-2xl font-bold p-4  text-white ">
+  Found {doctors.length} Doctors
+</h2>
+
+              <div className="space-y-4 ">
                 {doctors.map((doctor) => (
                   <DoctorCard key={doctor.id} doctor={doctor} />
                 ))}
