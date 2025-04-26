@@ -1,20 +1,19 @@
-
-import React from 'react';
-import { Checkbox } from "./ui/checkbox";
-import { Label } from "./ui/label";
-import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface FilterPanelProps {
   specialties: string[];
   selectedSpecialties: string[];
   consultationType: string | null;
   sortBy: string | null;
-  onSpecialtyChange: (specialty: string) => void;
-  onConsultationTypeChange: (type: string) => void;
-  onSortChange: (sortBy: string) => void;
+  onSpecialtyChange: (specialties: string[]) => void;
+  onConsultationTypeChange: (type: string | null) => void;
+  onSortChange: (sort: string | null) => void;
 }
 
-const FilterPanel: React.FC<FilterPanelProps> = ({
+export function FilterPanel({
   specialties,
   selectedSpecialties,
   consultationType,
@@ -22,93 +21,100 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
   onSpecialtyChange,
   onConsultationTypeChange,
   onSortChange,
-}) => {
-  const renderSpecialtyCheckbox = (specialty: string) => {
-    const testId = `filter-specialty-${specialty.replace('/', '-')}`;
-    
-    return (
-      <div key={specialty} className="flex items-center mb-2">
-        <Checkbox
-          id={`specialty-${specialty}`}
-          data-testid={testId}
-          checked={selectedSpecialties.includes(specialty)}
-          onCheckedChange={() => onSpecialtyChange(specialty)}
-        />
-        <Label 
-          htmlFor={`specialty-${specialty}`} 
-          className="ml-2 text-sm font-medium text-gray-700"
-        >
-          {specialty}
-        </Label>
-      </div>
-    );
+}: FilterPanelProps) {
+  const handleSpecialtyChange = (specialty: string, checked: boolean) => {
+    if (checked) {
+      onSpecialtyChange([...selectedSpecialties, specialty]);
+    } else {
+      onSpecialtyChange(selectedSpecialties.filter((s) => s !== specialty));
+    }
   };
 
   return (
-    <div className="w-64 bg-white p-4 border border-gray-200 rounded-lg">
-      {/* Consultation Type Filter */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3" data-testid="filter-header-moc">Consultation Mode</h3>
-        <RadioGroup
-          value={consultationType || ''}
-          onValueChange={onConsultationTypeChange}
-          className="flex flex-col gap-2"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem
-              value="Video Consult"
-              id="video-consult"
-              data-testid="filter-video-consult"
-            />
-            <Label htmlFor="video-consult">Video Consult</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem
-              value="In Clinic"
-              id="in-clinic"
-              data-testid="filter-in-clinic"
-            />
-            <Label htmlFor="in-clinic">In Clinic</Label>
-          </div>
-        </RadioGroup>
-      </div>
+    <div className="bg-white rounded-lg shadow-md p-4 w-full">
+      <h2 className="text-xl font-semibold mb-4">Filters</h2>
 
-      {/* Specialties Filter */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3" data-testid="filter-header-speciality">Speciality</h3>
-        <div className="max-h-60 overflow-y-auto pr-2">
-          {specialties.map(specialty => renderSpecialtyCheckbox(specialty))}
-        </div>
-      </div>
+      <Accordion type="multiple" defaultValue={["consultation", "specialties", "sort"]} className="space-y-4">
+        {/* Sort Filter - Moving to top for better visibility */}
+        <AccordionItem value="sort">
+          <AccordionTrigger className="font-medium text-lg py-2" data-testid="filter-header-sort">
+            Sort By
+          </AccordionTrigger>
+          <AccordionContent>
+            <RadioGroup
+              value={sortBy || ""}
+              onValueChange={(value) => onSortChange(value || null)}
+              className="space-y-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="fees" id="sort-fees" data-testid="sort-fees" />
+                <Label htmlFor="sort-fees" className="flex items-center">
+                  Fees <span className="text-sm text-gray-500 ml-1">(low to high)</span>
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="experience" id="sort-experience" data-testid="sort-experience" />
+                <Label htmlFor="sort-experience" className="flex items-center">
+                  Experience <span className="text-sm text-gray-500 ml-1">(high to low)</span>
+                </Label>
+              </div>
+            </RadioGroup>
+          </AccordionContent>
+        </AccordionItem>
 
-      {/* Sort Filter */}
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-3" data-testid="filter-header-sort">Sort</h3>
-        <RadioGroup
-          value={sortBy || ''}
-          onValueChange={onSortChange}
-          className="flex flex-col gap-2"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem
-              value="fees"
-              id="sort-fees"
-              data-testid="sort-fees"
-            />
-            <Label htmlFor="sort-fees">Fees (Low to High)</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem
-              value="experience"
-              id="sort-experience"
-              data-testid="sort-experience"
-            />
-            <Label htmlFor="sort-experience">Experience (High to Low)</Label>
-          </div>
-        </RadioGroup>
-      </div>
+        {/* Consultation Mode Filter */}
+        <AccordionItem value="consultation">
+          <AccordionTrigger className="font-medium text-lg py-2" data-testid="filter-header-moc">
+            Consultation Mode
+          </AccordionTrigger>
+          <AccordionContent>
+            <RadioGroup
+              value={consultationType || ""}
+              onValueChange={(value) => onConsultationTypeChange(value || null)}
+              className="space-y-2"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem
+                  value="Video Consult"
+                  id="video-consult"
+                  data-testid="filter-video-consult"
+                />
+                <Label htmlFor="video-consult">Video Consult</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem
+                  value="In Clinic"
+                  id="in-clinic"
+                  data-testid="filter-in-clinic"
+                />
+                <Label htmlFor="in-clinic">In Clinic</Label>
+              </div>
+            </RadioGroup>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Specialties Filter */}
+        <AccordionItem value="specialties">
+          <AccordionTrigger className="font-medium text-lg py-2" data-testid="filter-header-speciality">
+            Specialties
+          </AccordionTrigger>
+          <AccordionContent className="space-y-2 max-h-64 overflow-y-auto">
+            {specialties.map((specialty) => (
+              <div key={specialty} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`specialty-${specialty}`}
+                  checked={selectedSpecialties.includes(specialty)}
+                  onCheckedChange={(checked) => 
+                    handleSpecialtyChange(specialty, checked === true)
+                  }
+                  data-testid={`filter-specialty-${specialty.replace(/\//g, "-")}`}
+                />
+                <Label htmlFor={`specialty-${specialty}`}>{specialty}</Label>
+              </div>
+            ))}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
-};
-
-export default FilterPanel;
+}

@@ -1,68 +1,162 @@
 
-import { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Doctor } from "@/types/doctor";
+import { fetchDoctors } from "../services/doctorSerice";
 
-interface QueryParams {
-  search?: string;
-  consultationType?: string;
-  specialties?: string[];
-  sortBy?: string;
-}
+type SortOption = "fees" | "experience";
+type ConsultationType = "Video Consult" | "In Clinic" | null;
 
-export const useQueryParams = (initialParams: QueryParams = {}) => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [params, setParams] = useState<QueryParams>(initialParams);
-
-  // Parse URL parameters on initial load
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const urlParams: QueryParams = {};
-
-    const search = searchParams.get('search');
-    if (search) urlParams.search = search;
-
-    const consultationType = searchParams.get('consultationType');
-    if (consultationType) urlParams.consultationType = consultationType;
-
-    const specialtiesParam = searchParams.get('specialties');
-    if (specialtiesParam) {
-      urlParams.specialties = specialtiesParam.split(',');
-    }
-
-    const sortBy = searchParams.get('sortBy');
-    if (sortBy) urlParams.sortBy = sortBy;
-
-    setParams({ ...initialParams, ...urlParams });
-  }, [location.search, initialParams]);
-
-  // Update URL when params change
-  const updateParams = (newParams: Partial<QueryParams>) => {
-    const updatedParams = { ...params, ...newParams };
+export function useDoctorData() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Get filters from URL params
+  const searchQuery = searchParams.get("search") || "";
+  const consultationType = searchParams.get("consultationType") as ConsultationType;
+  const sortBy = searchParams.get("sortBy") as SortOption || null;
+  const selectedSpecialties = searchParams.getAll("specialty");
+  
+  // Set filters in URL params
+  const updateFilters = (filters: {
+    search?: string;
+    consultationType?: ConsultationType;
+    sortBy?: SortOption | null;
+    specialties?: string[];
+  }) => {
+    const newParams = new URLSearchParams(searchParams);
     
-    // Remove undefined or empty values
-    Object.keys(updatedParams).forEach(key => {
-      if (updatedParams[key as keyof QueryParams] === undefined || 
-         (Array.isArray(updatedParams[key as keyof QueryParams]) && 
-          (updatedParams[key as keyof QueryParams] as any).length === 0)) {
-        delete updatedParams[key as keyof QueryParams];
+    // Update search param
+    if (filters.search !== undefined) {
+      if (filters.search) {
+        newParams.set("search", filters.search);
+      } else {
+        newParams.delete("search");
       }
-    });
-
-    setParams(updatedParams);
-
-    // Update URL
-    const searchParams = new URLSearchParams();
-    
-    if (updatedParams.search) searchParams.set('search', updatedParams.search);
-    if (updatedParams.consultationType) searchParams.set('consultationType', updatedParams.consultationType);
-    if (updatedParams.specialties && updatedParams.specialties.length > 0) {
-      searchParams.set('specialties', updatedParams.specialties.join(','));
     }
-    if (updatedParams.sortBy) searchParams.set('sortBy', updatedParams.sortBy);
     
-    navigate(`?${searchParams.toString()}`, { replace: true });
+    // Update consultation type param
+    if (filters.consultationType !== undefined) {
+      if (filters.consultationType) {
+        newParams.set("consultationType", filters.consultationType);
+      } else {
+        newParams.delete("consultationType");
+      }
+    }
+    
+    // Update sort param
+    if (filters.sortBy !== undefined) {
+      if (filters.sortBy) {
+        newParams.set("sortBy", filters.sortBy);
+      } else {
+        newParams.delete("sortBy");
+      }
+    }
+    
+    // Update specialties param
+    if (filters.specialties !== undefined) {
+      newParams.delete("specialty");
+      filters.specialties.forEach(specialty => {
+        newParams.append("specialty", specialty);
+      });
+    }
+    
+    setSearchParams(newParams);
   };
 
-  return { params, updateParams };
-};
+  // Fetch doctors data
+  useEffect(() => {
+    const getDoctors = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchDoctors();
+        setDoctors(data);
+        setError(null);
+      } catch (err) {
+        setError("Failed to fetch doctors");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    getDoctors();
+  }, []);
+
+  // Get unique specialties
+  const specialties = useMemo(() => {
+    const specialtiesSet = new Set<string>();
+    doctors.forEach(doctor => {
+      doctor.specialties.forEach(specialty => {
+        specialtiesSet.add(specialty);
+      });
+    });
+    return Array.from(specialtiesSet).sort();
+  }, [doctors]);
+
+  // Filter and sort doctors
+  const filteredDoctors = useMemo(() => {
+    return doctors
+      .filter(doctor => {
+        // Filter by search query
+        if (searchQuery && !doctor.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+          return false;
+        }
+        
+        // Filter by consultation type
+        if (consultationType && !doctor.consultationType.includes(consultationType)) {
+          return false;
+        }
+        
+        // Filter by specialties
+        if (selectedSpecialties.length > 0) {
+          const hasSelectedSpecialty = doctor.specialties.some(specialty => 
+            selectedSpecialties.includes(specialty)
+          );
+          if (!hasSelectedSpecialty) {
+            return false;
+          }
+        }
+        
+        return true;
+      })
+      .sort((a, b) => {
+        // Sort by selected option
+        if (sortBy === "fees") {
+          return a.fees - b.fees; // Low to high
+        } else if (sortBy === "experience") {
+          // Ensure we're comparing numeric values and sorting in descending order
+          return b.experience - a.experience; // High to low (fixed)
+        }
+        // Default sort by name if no sort option selected
+        return a.name.localeCompare(b.name);
+      });
+  }, [doctors, searchQuery, consultationType, selectedSpecialties, sortBy]);
+
+  // Get autocomplete suggestions
+  const getAutocompleteSuggestions = (query: string): Doctor[] => {
+    if (!query) return [];
+    
+    const lowerQuery = query.toLowerCase();
+    return doctors
+      .filter(doctor => 
+        doctor.name.toLowerCase().includes(lowerQuery)
+      )
+      .slice(0, 3); // Top 3 matches
+  };
+
+  return {
+    doctors: filteredDoctors,
+    loading,
+    error,
+    specialties,
+    searchQuery,
+    consultationType,
+    selectedSpecialties,
+    sortBy,
+    updateFilters,
+    getAutocompleteSuggestions,
+  };
+}

@@ -1,71 +1,110 @@
-import React from 'react';
-import { Doctor } from '../services/doctorApi';
-import { Avatar, AvatarFallback } from './ui/avatar';
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Doctor } from "../types/doctor";
 
 interface DoctorCardProps {
   doctor: Doctor;
 }
 
-const DoctorCard: React.FC<DoctorCardProps> = ({ doctor }) => {
+export function DoctorCard({ doctor }: DoctorCardProps) {
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
+  const specialtiesToShow = doctor.specialties.length > 0 ? doctor.specialties : ['General Physician'];
+  const avatarUrl = doctor.avatarUrl || doctor.photo;
+
   return (
-    <div
-  data-testid="doctor-card"
-  className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-transform transform hover:scale-105"
->
-      <div className="flex flex-col md:flex-row">
-        {/* Doctor's avatar/image section */}
-        <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-4">
-          <Avatar className="w-20 h-20">
-            <AvatarFallback className="bg-medical-100 text-medical-700">
-              {doctor.name.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-        </div>
-
-        {/* Doctor's details section */}
-        <div className="flex-grow">
-          <h2 data-testid="doctor-name" className="text-xl font-bold text-gray-800 mb-1">
-            Dr. {doctor.name}
-          </h2>
+    <Card 
+      className="mb-4 overflow-hidden transition-all duration-200 hover:shadow-lg hover:border-blue-300" 
+      data-testid="doctor-card"
+    >
+      <CardContent className="p-6">
+        <div className="flex flex-col md:flex-row gap-4">
           
-          <div data-testid="doctor-specialty" className="text-sm text-gray-600 mb-2">
-            {doctor.speciality.join(', ')}
-          </div>
-          
-          <div className="flex flex-wrap gap-4 mb-3">
-            <div data-testid="doctor-experience" className="flex items-center">
-              <span className="text-gray-500 text-sm">Experience:</span>
-              <span className="ml-1 text-gray-800 font-medium text-sm">{doctor.experience}</span>
+          {/* Left section: Avatar + Info */}
+          <div className="flex flex-1 gap-4">
+            {/* Doctor's avatar */}
+            <div className="flex-shrink-0">
+              <Avatar className="h-20 w-20" aria-label={`${doctor.name}'s profile picture`}>
+                {avatarUrl && (
+                  <AvatarImage 
+                    src={avatarUrl} 
+                    alt={doctor.name}
+                    className="object-cover"
+                  />
+                )}
+                <AvatarFallback className="text-lg bg-blue-100 text-blue-800">
+                  {doctor.name_initials || getInitials(doctor.name)}
+                </AvatarFallback>
+              </Avatar>
             </div>
-            
-            <div data-testid="doctor-fee" className="flex items-center">
-              <span className="text-gray-500 text-sm">Fee:</span>
-              <span className="ml-1 text-gray-800 font-medium text-sm">₹{doctor.fee}</span>
+
+            {/* Doctor's details */}
+            <div className="flex-grow">
+              {/* Name, specialty, qualifications */}
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-1" data-testid="doctor-name">
+                  Dr. {doctor.name}
+                </h3>
+                <p className="text-gray-600" data-testid="doctor-specialty">
+                  {(doctor.specialties || []).join(", ")}
+                </p>
+                <p className="text-gray-500">{doctor.qualifications}</p>
+              </div>
+
+              {/* Experience */}
+              <div className="mt-2">
+                <p className="text-sm text-gray-600" data-testid="doctor-experience">
+                  <span className="font-medium">{doctor.experience} years</span> of experience
+                </p>
+              </div>
+
+              {/* Consultation types (MOC) */}
+              <div className="flex flex-wrap gap-2 mt-2">
+                {(doctor.consultationType || []).map((mode, index) => (
+                  <span
+                    key={index}
+                    className={`inline-block px-3 py-1 text-xs font-medium rounded-xl shadow-sm leading-none ${
+                      mode === "Video Consult"
+                        ? "bg-green-100 text-green-800 border border-green-300"
+                        : "bg-blue-100 text-blue-800 border border-blue-300"
+                    }`}
+                  >
+                    {mode}
+                  </span>
+                ))}
+              </div>
+
+              {/* Clinic name and location */}
+              <div className="text-sm text-gray-600 mt-2">
+                {doctor.clinicName} • {doctor.location}
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {doctor.moc.map((mode, index) => (
-              <span 
-                key={index} 
-                className={`px-2 py-1 text-xs rounded-full ${
-                  mode === "Video Consult" 
-                    ? "bg-green-100 text-green-800 border border-green-300" 
-                    : "bg-blue-100 text-blue-800 border border-blue-300"
-                }`}
-              >
-                {mode}
-              </span>
-            ))}
-          </div>
-          
-          <div className="mt-3 text-xs text-gray-500">
-            {doctor.hospital} • {doctor.area}, {doctor.city}
+          {/* Right section: Fee + Book button */}
+          <div className="flex flex-col items-center justify-center gap-3">
+            <div className="text-right w-full">
+              <p className="text-lg font-semibold" data-testid="doctor-fee">
+                ₹{doctor.fees}
+              </p>
+            </div>
+            <button
+              className="bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition duration-200 text-sm font-medium w-full"
+              aria-label="Book appointment"
+            >
+              Book
+            </button>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
-};
-
-export default DoctorCard;
+}
