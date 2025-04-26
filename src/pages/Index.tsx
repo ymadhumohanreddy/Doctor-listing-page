@@ -76,7 +76,7 @@ const Index = () => {
             </div>
           ) : (
             <div>
-              <h2 className="text-2xl font-bold p-4  text-white ">
+              <h2 className="text-2xl font-bold p-1 text-white font-sans ">
   Found {doctors.length} Doctors
 </h2>
 
